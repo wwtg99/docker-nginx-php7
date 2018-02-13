@@ -7,19 +7,34 @@ Docker image support Nginx and PHP 7.1 depends on Centos 7. Composer and supervi
 - Nginx
 - PHP-FPM
 
+## PHP modules
+Support most useful modules,
+
+- gd
+- mbstring
+- bcmath
+- process
+- xml
+- mysql
+- postgresql
+- mongodb
+- opcache
+
 ## Usage
 
 Run image
 
 ```
-docker run -d --name nginx-php -p 8080:80  wwtg99/nginx-php:latest
+docker run -d --name nginx-php -p 8080:80  wwtg99/docker-nginx-php7:latest
 ```
+
 
 Show service status
 
 ```
 docker exec nginx-php supervisorctl status
 ```
+
 
 Restart service
 
@@ -32,22 +47,20 @@ docker exec nginx-php supervisorctl restart all
 - /data/conf/nginx: nginx server config directory, put your own server config here
 - /data/conf/supervisord: supervisord program config directory, put your own deamon program config here
 - /data/log: default log directory for nginx and supervisord
+- /data/script: script.sh in the directory will be run before server started
 
 Use your own server
 ```
-docker run -d --name nginx-php -p 8080:80 -v /your_server_dir:/data/www -v /your_server_conf_dir:/data/conf/nginx  wwtg99/nginx-php:latest
+docker run -d --name nginx-php -p 8080:80 -v /your_server_dir:/data/www -v /your_server_conf_dir:/data/conf/nginx  wwtg99/docker-nginx-php7:latest
 ```
 
 Notice, if /data/conf/nginx/website.conf is not exists, there will create a default server config file. So use website.conf for your config file name, or there will be conflict for port 80.
 
 ## Scripts
-If you have your own scripts to run before server started(such as change timezone), add them to script.sh and rebuild the image or build from it.
+If you have your own scripts to run before server started(such as change timezone), add them to script.sh and put the script in the script volume.
 
 ```
-FROM wwtg99/docker-nginx-php7:latest
-ADD script.sh /
-RUN /bin/bash /script.sh
-CMD ["/bin/bash", "/start.sh"]
+docker run -d --name nginx-php -p 8080:80 -v /your_script_dir:/data/script wwtg99/docker-nginx-php7:latest
 ```
 
 ## Thanks

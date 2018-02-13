@@ -34,10 +34,11 @@ RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.
     libmcrypt-devel \
     openssh-server \
     postgresql-devel \
+    git \
     python-setuptools
 
 # Add dir & user
-RUN mkdir -p /data/{www,phpext,conf,log} && \
+RUN mkdir -p /data/{www,phpext,conf,log,script} && \
     useradd -r -s /sbin/nologin -d /data/www -m -k no www && \
     chown -R www:www /data/www && \
     chown -R www:www /data/log
@@ -69,14 +70,7 @@ WORKDIR /data/phpext
 RUN php composer-setup.php && ln -s /data/phpext/composer.phar /bin/composer
 
 # Clean OS
-RUN yum remove -y gcc \
-    gcc-c++ \
-    autoconf \
-    automake \
-    libtool \
-    make \
-    cmake && \
-    yum clean all && \
+RUN yum clean all && \
     rm -rf /tmp/* /var/cache/{yum,ldconfig} /etc/my.cnf{,.d} && \
     mkdir -p --mode=0755 /var/cache/{yum,ldconfig} && \
     find /var/log -type f -delete
@@ -88,16 +82,15 @@ ADD conf/php-fpm.conf /etc/php-fpm.d/www.conf
 ADD conf/supervisord.conf /etc/supervisord.conf
 
 # Create volume
-VOLUME ["/data/www", "/data/conf/nginx", "/data/conf/supervisord", "/data/log"]
+VOLUME ["/data/www", "/data/conf/nginx", "/data/conf/supervisord", "/data/log", "/data/script"]
 
 WORKDIR /data/www
 ADD index.php /data/www/
 
 # Start script
-ADD script.sh /
+ADD script.sh /data/script/
 ADD start.sh /
 RUN chmod +x /start.sh
-RUN /bin/bash /script.sh
 
 # Set port
 EXPOSE 80 443

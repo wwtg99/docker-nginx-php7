@@ -45,4 +45,9 @@ server {
 EOF
 fi
 
+# run user script
+if [[ -f "/data/script/script.sh" ]]; then
+  source /data/script/script.sh
+fi
+
 /usr/bin/supervisord -n -c /etc/supervisord.conf
