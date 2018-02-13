@@ -69,17 +69,17 @@ WORKDIR /data/phpext
 RUN php composer-setup.php && ln -s /data/phpext/composer.phar /bin/composer
 
 # Clean OS
-# RUN yum remove -y gcc \
-#     gcc-c++ \
-#     autoconf \
-#     automake \
-#     libtool \
-#     make \
-#     cmake && \
-#     yum clean all && \
-#     rm -rf /tmp/* /var/cache/{yum,ldconfig} /etc/my.cnf{,.d} && \
-#     mkdir -p --mode=0755 /var/cache/{yum,ldconfig} && \
-#     find /var/log -type f -delete
+RUN yum remove -y gcc \
+    gcc-c++ \
+    autoconf \
+    automake \
+    libtool \
+    make \
+    cmake && \
+    yum clean all && \
+    rm -rf /tmp/* /var/cache/{yum,ldconfig} /etc/my.cnf{,.d} && \
+    mkdir -p --mode=0755 /var/cache/{yum,ldconfig} && \
+    find /var/log -type f -delete
 
 # Add conf
 RUN mkdir -p /data/conf/{nginx,supervisord}

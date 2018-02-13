@@ -7,6 +7,7 @@
 # Created Time: 2018/02/12
 #########################################################################
 
+# add default nginx server config
 Nginx_Conf=/data/conf/nginx
 DATA_DIR=/data/www
 

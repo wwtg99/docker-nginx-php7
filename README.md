@@ -1,15 +1,30 @@
 # docker-nginx-php7
 
 ## Description
-Docker image support Nginx and PHP 7.1 depends on Centos 7.
+Docker image support Nginx and PHP 7.1 depends on Centos 7. Composer and supervisor added, very convenient for Laravel projects.
 
 ## Services
 - Nginx
 - PHP-FPM
 
 ## Usage
+
+Run image
+
 ```
 docker run -d --name nginx-php -p 8080:80  wwtg99/nginx-php:latest
+```
+
+Show service status
+
+```
+docker exec nginx-php supervisorctl status
+```
+
+Restart service
+
+```
+docker exec nginx-php supervisorctl restart all
 ```
 
 ## Volumes
@@ -26,12 +41,17 @@ docker run -d --name nginx-php -p 8080:80 -v /your_server_dir:/data/www -v /your
 Notice, if /data/conf/nginx/website.conf is not exists, there will create a default server config file. So use website.conf for your config file name, or there will be conflict for port 80.
 
 ## Scripts
-If you have your own scripts to run before server started(such as change timezone), add them to script.sh and rebuild the image.
+If you have your own scripts to run before server started(such as change timezone), add them to script.sh and rebuild the image or build from it.
+
+```
+FROM wwtg99/docker-nginx-php7:latest
+ADD script.sh /
+RUN /bin/bash /script.sh
+CMD ["/bin/bash", "/start.sh"]
+```
 
 ## Thanks
 [Skiychan](https://github.com/skiy-dockerfile/nginx-php7)
 
 ## Author
-
 [wwtg99](http://52jing.wang)
-

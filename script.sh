@@ -6,5 +6,6 @@
 # - setup project
 # - run composer
 # - ...
-echo "Change default timezone"
+
+# Change default timezone
 ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
