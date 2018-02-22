@@ -8,4 +8,6 @@
 # - ...
 
 # Change default timezone
-ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+if [[ -n "$TZ" ]]; then
+	ln -sf /usr/share/zoneinfo/$TZ /etc/localtime
+fi

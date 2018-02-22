@@ -18,14 +18,14 @@ if [[ ! -f "${Nginx_Conf}/website.conf" ]]; then
 
 	echo 'Create test server config file.'
 
-	if [ "$PROXY_DOMAIN" = "" ]; then
-		PROXY_DOMAIN='localhost'
+	if [ "$DOMAIN" = "" ]; then
+		DOMAIN='localhost'
 	fi
 
 	cat > ${Nginx_Conf}/website.conf << EOF
 server {
    listen 80;
-   server_name $PROXY_DOMAIN;
+   server_name $DOMAIN;
    
    root   $DATA_DIR;
    index  index.php index.html index.htm;
