@@ -1,6 +1,15 @@
 FROM centos:7
 MAINTAINER wwtg99 <wwtg99@126.com>
 
+# Update yum repo
+# RUN wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+
+# Add dir & user
+RUN mkdir -p /data/{www,ext,conf/{nginx,supervisord},log,script} && \
+    useradd -r -s /sbin/nologin -d /data/www -M www && \
+    chown -R www:www /data/www /data/log
+WORKDIR /data/ext
+
 # Install base library
 RUN set -x && \
     yum install -y gcc \
@@ -10,14 +19,11 @@ RUN set -x && \
     libtool \
     wget \
     make \
-    cmake
-
-# Update yum repo
-# RUN wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+    cmake \
+    epel-release && \
 
 # Install library
-RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
-    yum install epel-release && \
+    rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
     rpm -Uvh https://mirror.webtatic.com/yum/el7/webtatic-release.rpm && \
     yum install -y zlib \
     zlib-devel \
@@ -35,68 +41,55 @@ RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.
     openssh-server \
     postgresql-devel \
     git \
-    python-setuptools
-
-# Add dir & user
-RUN mkdir -p /data/{www,phpext,conf,log,script} && \
-    useradd -r -s /sbin/nologin -d /data/www -m -k no www && \
-    chown -R www:www /data/www && \
-    chown -R www:www /data/log
+    python-setuptools \
+    nginx \
 
 # Install PHP
-RUN yum install -y php71w php71w-fpm php71w-cli php71w-common php71w-devel \
-    php71w-gd php71w-pdo php71w-mysql php71w-mbstring php71w-bcmath \
-    php71w-fpm php71w-opcache php71w-pgsql php71w-process php71w-xml
+    php72w php72w-fpm php72w-cli php72w-common php72w-devel php72w-gd \
+    php72w-pdo php72w-mysqlnd php72w-mysqli php72w-mbstring php72w-bcmath \
+    php72w-fpm php72w-opcache php72w-pgsql php72w-process php72w-xml && \
+
+# Install supervisor
+    easy_install supervisor && \
+
+# Install composer
+    wget https://getcomposer.org/installer -O /data/ext/composer-setup.php && \
+    php /data/ext/composer-setup.php && ln -s /data/ext/composer.phar /bin/composer && \
 
 # Install PHP mongo
-RUN wget https://pecl.php.net/get/mongodb-1.4.0.tgz -O /data/phpext/mongodb-1.4.0.tgz && \
-    tar zxf /data/phpext/mongodb-1.4.0.tgz -C /data/phpext
-WORKDIR /data/phpext/mongodb-1.4.0
+    wget https://pecl.php.net/get/mongodb-1.4.0.tgz -O /data/ext/mongodb-1.4.0.tgz && \
+    tar zxf /data/ext/mongodb-1.4.0.tgz -C /data/ext
+WORKDIR /data/ext/mongodb-1.4.0
 RUN /usr/bin/phpize && \
     ./configure --with-php-config=/usr/bin/php-config && \
     make && make install && \
     echo "extension=mongodb.so" > /etc/php.d/mongodb.ini
 
-# Install nginx
-RUN yum install -y nginx
-
-# Install supervisor
-RUN easy_install supervisor && \
-    mkdir -p /var/{log/supervisor,run/{sshd,supervisord}}
-
-# Install composer
-RUN wget https://getcomposer.org/installer -O /data/phpext/composer-setup.php
-WORKDIR /data/phpext
-RUN php composer-setup.php && ln -s /data/phpext/composer.phar /bin/composer
-
 # Clean OS
 RUN yum clean all && \
     rm -rf /tmp/* /var/cache/{yum,ldconfig} /etc/my.cnf{,.d} && \
     mkdir -p --mode=0755 /var/cache/{yum,ldconfig} && \
-    find /var/log -type f -delete
+    find /var/log -type f -delete && \
+    rm -fr /data/ext/mongodb-1.4.0 /data/ext/mongodb-1.4.0.tgz /data/ext/composer-setup.php
 
-# Add conf
-RUN mkdir -p /data/conf/{nginx,supervisord}
-ADD conf/nginx.conf /etc/nginx/nginx.conf
-ADD conf/php-fpm.conf /etc/php-fpm.d/www.conf
-ADD conf/supervisord.conf /etc/supervisord.conf
+# Add config file
+COPY conf/nginx.conf /etc/nginx/nginx.conf
+COPY conf/php-fpm.conf /etc/php-fpm.d/www.conf
+COPY conf/supervisord.conf /etc/supervisord.conf
 
 # Create volume
 VOLUME ["/data/www", "/data/conf/nginx", "/data/conf/supervisord", "/data/log", "/data/script"]
 
+# Add home page
 WORKDIR /data/www
-ADD index.php /data/www/
+COPY index.php /data/www/
 
-# Start script
-ADD script.sh /data/script/
-ADD start.sh /
-RUN chmod +x /start.sh
+# Add scripts
+COPY script.sh /data/script/
+COPY start.sh /
 
 # Set port
 EXPOSE 80 443
-
-# Start it
-# ENTRYPOINT ["/start.sh"]
 
 # Start web server
 CMD ["/bin/bash", "/start.sh"]
